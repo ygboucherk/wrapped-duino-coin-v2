@@ -23,7 +23,7 @@ use_wrapper = True # Choosing if you want to use wrapper or not
 if use_wrapper:
     import tronpy # tronpy isn't default installed, install it with "pip install tronpy"
     from tronpy.keys import PrivateKey, PublicKey
-    wrapper_private_key = "REMOVED because of a PRIVATE KEY has to be PRIVATE" # private key used for interacting with blockchain, removed because of it's PRIVATE
+    wrapper_private_key = "removed because of it has to be private" # private key used for interacting with blockchain, removed because of it's PRIVATE
     wrapper_public_key = PrivateKey(bytes.fromhex(wrapper_private_key)).public_key.to_base58check_address() # wrapper's public key
     tron = tronpy.Tron(network="shasta")
     wduco = tron.get_contract("TXYTNzayd9itrDkJugAzevTpuUNrt9aUqp") # wDUCO contract
@@ -616,7 +616,7 @@ def handle(c):
 
                                 try:
                                     print("Sending tron transaction !")
-                                    txn = wduco.functions.confirmWithdraw(tron_address,int(float(amount)*10**6)).with_owner(wrapper_public_key).fee_limit(5_000_000).build().sign(PrivateKey(bytes.fromhex(wrapper_private_key)))
+                                    txn = wduco.functions.confirmWithdraw(username,tron_address,int(float(amount)*10**6)).with_owner(wrapper_public_key).fee_limit(5_000_000).build().sign(PrivateKey(bytes.fromhex(wrapper_private_key)))
                                     print("txid :", txn.txid)
                                     txn = txn.broadcast()
                                     print("Sent confirm tx to tron network")
