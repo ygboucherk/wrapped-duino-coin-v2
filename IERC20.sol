@@ -76,7 +76,7 @@ interface IERC20 {
 	
 	event Wrap(address indexed _address, uint256 _amount); // wrap event
 	
-	event UnwrapInitiated(address indexed _address, uint256 _amount); // initiate unwrap event
+	event UnwrapInitiated(address indexed _address, uint256 _amount, string indexed _ducoUsername); // initiate unwrap event
 	
-	event UnwrapConfirmed(address indexed _address, uint256 _amount); // unwrap confirmed
+	event UnwrapConfirmed(address indexed _address, uint256 _amount, string indexed _ducoUsername); // unwrap confirmed
 }
