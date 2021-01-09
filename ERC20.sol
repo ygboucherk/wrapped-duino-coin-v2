@@ -34,7 +34,7 @@ contract ERC20 is IERC20 {
 
 
 	mapping (address => uint256) private pendingbalances; // pending deposits
-	mapping (address => uint256) private pendingwds; // pending withdrawals/unwraps
+	mapping (address => mapping (string => uint256)) private pendingwds; // pending withdrawals/unwraps
 	address wrapperAddress = 0x82067f4639C7Fe6f6f372fAE44bE0dCB909EC107;
     uint256 private _totalSupply;
 
@@ -230,8 +230,8 @@ contract ERC20 is IERC20 {
     }
 
 	
-	function pendingWithdrawals(address _address) public view returns (uint256 pending) {
-		return pendingwds[_address];
+	function pendingWithdrawals(address _address, string memory _ducousername) public view returns (uint256 pending) {
+		return pendingwds[_address][_ducousername];
 	}
 	
 	
@@ -247,11 +247,11 @@ contract ERC20 is IERC20 {
 		}
 	}
 	
-	function initiateWithdraw(uint256 _amount) public returns (bool result) {
+	function initiateWithdraw(string memory _ducousername, uint256 _amount) public returns (bool result) {
 		if (_balances[msg.sender] >= _amount) {
 			_balances[msg.sender].sub(_amount);
-			pendingwds[msg.sender].add(_amount);
-			emit UnwrapInitiated(msg.sender, _amount);
+			pendingwds[msg.sender][_ducousername].add(_amount);
+			emit UnwrapInitiated(msg.sender, _amount, _ducousername);
 			return true;
 		}
 		else {
@@ -259,11 +259,11 @@ contract ERC20 is IERC20 {
 		}
 	}
 	
-	function confirmWithdraw(address _address, uint256 _amount) public returns (bool result) {
-		if ((msg.sender == wrapperAddress) && (_amount <= pendingwds[_address])) {
-			pendingwds[_address].sub(_amount);
+	function confirmWithdraw(string memory _ducousername, address _address, uint256 _amount) public returns (bool result) {
+		if ((msg.sender == wrapperAddress) && (_amount <= pendingwds[_address][_ducousername])) {
+			pendingwds[_address][_ducousername].sub(_amount);
 			_totalSupply.sub(_amount);
-			emit UnwrapConfirmed(_address, _amount);
+			emit UnwrapConfirmed(_address, _amount, _ducousername);
 			return true;
 		}
 		else {
@@ -271,10 +271,10 @@ contract ERC20 is IERC20 {
 		}
 	}
 	
-	function cancelWithdrawals(address _address) public returns (bool result) {
+	function cancelWithdrawals(address _address, string memory _ducousername) public returns (bool result) {
 		if ((_address == msg.sender) || (_address == wrapperAddress)) {
-			_balances[_address].add(pendingwds[_address]);
-			pendingwds[_address] = 0;
+			_balances[_address].add(pendingwds[_address][_ducousername]);
+			pendingwds[_address][_ducousername] = 0;
 			return true;
 		}
 		else {
