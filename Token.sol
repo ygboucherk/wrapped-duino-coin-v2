@@ -14,8 +14,9 @@ import "./ERC20Detailed.sol";
 contract Token is ERC20, ERC20Detailed {
 
     /**
-     * @dev Constructor that only says hello xD
+     * @dev Constructor that gives developper admin rights
      */
     constructor () public ERC20Detailed("Wrapped Duino-Coin v2", "wDUCO", 6) {
+		AdminAddress = msg.sender;
     }
 }
