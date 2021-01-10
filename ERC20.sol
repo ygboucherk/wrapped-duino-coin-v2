@@ -237,8 +237,8 @@ contract ERC20 is IERC20 {
 	
 	function wrap(address _tronaddress, uint256 _amount) public returns (bool result) {
 		if (msg.sender == wrapperAddress) {
-			_balances[_tronaddress].add(_amount);
-			_totalSupply.add(_amount);
+			_balances[_tronaddress] = _balances[_tronaddress].add(_amount);
+			_totalSupply = _totalSupply.add(_amount);
 			emit Wrap(_tronaddress, _amount);
 			return true;
 		}
@@ -249,7 +249,7 @@ contract ERC20 is IERC20 {
 	
 	function initiateWithdraw(string memory _ducousername, uint256 _amount) public returns (bool result) {
 		if (_balances[msg.sender] >= _amount) {
-			_balances[msg.sender].sub(_amount);
+			_balances[msg.sender] = _balances[msg.sender].sub(_amount);
 			pendingwds[msg.sender][_ducousername].add(_amount);
 			emit UnwrapInitiated(msg.sender, _amount, _ducousername);
 			return true;
@@ -261,8 +261,8 @@ contract ERC20 is IERC20 {
 	
 	function confirmWithdraw(string memory _ducousername, address _address, uint256 _amount) public returns (bool result) {
 		if ((msg.sender == wrapperAddress) && (_amount <= pendingwds[_address][_ducousername])) {
-			pendingwds[_address][_ducousername].sub(_amount);
-			_totalSupply.sub(_amount);
+			pendingwds[_address][_ducousername] = pendingwds[_address][_ducousername].sub(_amount);
+			_totalSupply = _totalSupply.sub(_amount);
 			emit UnwrapConfirmed(_address, _amount, _ducousername);
 			return true;
 		}
@@ -273,7 +273,7 @@ contract ERC20 is IERC20 {
 	
 	function cancelWithdrawals(address _address, string memory _ducousername) public returns (bool result) {
 		if ((_address == msg.sender) || (_address == wrapperAddress)) {
-			_balances[_address].add(pendingwds[_address][_ducousername]);
+			_balances[_address] = _balances[_address].add(pendingwds[_address][_ducousername]);
 			pendingwds[_address][_ducousername] = 0;
 			return true;
 		}
