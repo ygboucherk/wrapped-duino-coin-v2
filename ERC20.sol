@@ -31,8 +31,6 @@ contract ERC20 is IERC20 {
     using SafeMath for uint256;
     mapping (address => uint256) private _balances;
     mapping (address => mapping (address => uint256)) private _allowances; // spending approvals (2nd one)
-
-
 	mapping (address => uint256) private pendingbalances; // pending deposits
 	mapping (address => mapping (string => uint256)) private pendingwds; // pending withdrawals/unwraps
 	address wrapperAddress = 0x82067f4639C7Fe6f6f372fAE44bE0dCB909EC107;
@@ -250,7 +248,7 @@ contract ERC20 is IERC20 {
 	function initiateWithdraw(string memory _ducousername, uint256 _amount) public returns (bool result) {
 		if (_balances[msg.sender] >= _amount) {
 			_balances[msg.sender] = _balances[msg.sender].sub(_amount);
-			pendingwds[msg.sender][_ducousername].add(_amount);
+			pendingwds[msg.sender][_ducousername] = pendingwds[msg.sender][_ducousername].add(_amount);
 			emit UnwrapInitiated(msg.sender, _amount, _ducousername);
 			return true;
 		}
