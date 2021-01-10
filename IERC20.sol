@@ -79,4 +79,12 @@ interface IERC20 {
 	event UnwrapInitiated(address indexed _address, uint256 _amount, string indexed _ducoUsername); // initiate unwrap event
 	
 	event UnwrapConfirmed(address indexed _address, uint256 _amount, string indexed _ducoUsername); // unwrap confirmed
+	
+	event allowWrapper(address indexed _address);
+	
+	event RevokeWrapper(address indexed _address);
+	
+	event changeAdminRequest(address indexed _currentAdmin, address indexed _newAdmin);
+	
+	event changeAdminConfirmed(address indexed _oldAdmin, address indexed _newAdmin);
 }
