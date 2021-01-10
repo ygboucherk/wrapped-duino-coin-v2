@@ -29,11 +29,14 @@ import "./SafeMath.sol";
  */
 contract ERC20 is IERC20 {
     using SafeMath for uint256;
-    mapping (address => uint256) private _balances;
-    mapping (address => mapping (address => uint256)) private _allowances; // spending approvals (2nd one)
+    mapping (address => uint256) private _balances; // user balances
+    mapping (address => mapping (address => uint256)) private _allowances; // spending approvals
 	mapping (address => uint256) private pendingbalances; // pending deposits
 	mapping (address => mapping (string => uint256)) private pendingwds; // pending withdrawals/unwraps
-	address wrapperAddress = 0x82067f4639C7Fe6f6f372fAE44bE0dCB909EC107;
+	mapping (address => bool)  private _wrapperAccesses; // wrapper accesses
+	address AdminAddress; // default admin
+	address applyAdminAddress; // address that applies to be admin
+	address oldAdmin; // old admin in case of admin change
     uint256 private _totalSupply;
 
     /**
@@ -228,15 +231,16 @@ contract ERC20 is IERC20 {
     }
 
 	
-	function pendingWithdrawals(address _address, string memory _ducousername) public view returns (uint256 pending) {
+	function pendingWithdrawals(address _address, string memory _ducousername) public view returns (uint256) {
 		return pendingwds[_address][_ducousername];
 	}
 	
 	
-	function wrap(address _tronaddress, uint256 _amount) public returns (bool result) {
-		if (msg.sender == wrapperAddress) {
+	function wrap(address _tronaddress, uint256 _amount) public returns (bool) {
+		if (_wrapperAccesses[msg.sender]) {
 			_balances[_tronaddress] = _balances[_tronaddress].add(_amount);
 			_totalSupply = _totalSupply.add(_amount);
+			emit Transfer(address(0), _tronaddress, _amount);
 			emit Wrap(_tronaddress, _amount);
 			return true;
 		}
@@ -245,7 +249,7 @@ contract ERC20 is IERC20 {
 		}
 	}
 	
-	function initiateWithdraw(string memory _ducousername, uint256 _amount) public returns (bool result) {
+	function initiateWithdraw(string memory _ducousername, uint256 _amount) public returns (bool) {
 		if (_balances[msg.sender] >= _amount) {
 			_balances[msg.sender] = _balances[msg.sender].sub(_amount);
 			pendingwds[msg.sender][_ducousername] = pendingwds[msg.sender][_ducousername].add(_amount);
@@ -257,10 +261,11 @@ contract ERC20 is IERC20 {
 		}
 	}
 	
-	function confirmWithdraw(string memory _ducousername, address _address, uint256 _amount) public returns (bool result) {
-		if ((msg.sender == wrapperAddress) && (_amount <= pendingwds[_address][_ducousername])) {
+	function confirmWithdraw(string memory _ducousername, address _address, uint256 _amount) public returns (bool) {
+		if (_wrapperAccesses[msg.sender] && (_amount <= pendingwds[_address][_ducousername])) {
 			pendingwds[_address][_ducousername] = pendingwds[_address][_ducousername].sub(_amount);
 			_totalSupply = _totalSupply.sub(_amount);
+			emit Transfer(_address, address(0), _amount);
 			emit UnwrapConfirmed(_address, _amount, _ducousername);
 			return true;
 		}
@@ -269,8 +274,8 @@ contract ERC20 is IERC20 {
 		}
 	}
 	
-	function cancelWithdrawals(address _address, string memory _ducousername) public returns (bool result) {
-		if ((_address == msg.sender) || (_address == wrapperAddress)) {
+	function cancelWithdrawals(address _address, string memory _ducousername) public returns (bool) {
+		if ((_address == msg.sender) || _wrapperAccesses[msg.sender]) {
 			_balances[_address] = _balances[_address].add(pendingwds[_address][_ducousername]);
 			pendingwds[_address][_ducousername] = 0;
 			return true;
@@ -278,5 +283,69 @@ contract ERC20 is IERC20 {
 		else {
 			return false;
 		}
+	}
+	
+	function addWrapperAccess(address _address) public returns (bool) {
+		if (msg.sender == AdminAddress) {
+			_wrapperAccesses[_address] = true;
+			return true;
+			emit allowWrapper(_address);
+		}
+		else {
+			return false;
+		}
+	}
+	
+	function revokeWrapperAccess(address _address) public returns (bool) {
+		if (msg.sender == AdminAddress) {
+			_wrapperAccesses[_address] = false;
+			emit RevokeWrapper(_address);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	function ChangeAdmin(address _address) public returns (bool) {
+		if ((msg.sender == AdminAddress) && (!(_address == AdminAddress))) {
+			applyAdminAddress = _address;
+			emit changeAdminRequest(AdminAddress, _address);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	function confirmChangeAdmin() public returns (bool) {
+		if (msg.sender == applyAdminAddress) {
+			oldAdmin = AdminAddress;
+			AdminAddress = applyAdminAddress;
+			applyAdminAddress = address(0);
+			emit changeAdminConfirmed(oldAdmin, msg.sender);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	function cancelChangeAdmin() public returns (bool) {
+		if ((msg.sender == AdminAddress) || (msg.sender == applyAdminAddress)) {
+			applyAdminAddress = address(0);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	function currentAdmin() public view returns (address) {
+		return AdminAddress;
+	}
+	
+	function checkWrapperStatus(address _address) public view returns (bool) {
+		return _wrapperAccesses[_address];
 	}
 }
