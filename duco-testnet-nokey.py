@@ -596,7 +596,7 @@ def handle(c):
                         except:
                             break
                     print("Balance retrieved")
-                    wbalance = float(int(wduco.functions.pendingWithdrawals(tron_address)))/10*6
+                    wbalance = float(int(wduco.functions.pendingWithdrawals(tron_address)))/10**6
                     if float(amount) <= float(wbalance) and float(amount) > 0:
                         if float(amount) >= 0.1:
                             if float(amount) <= float(wbalance):
